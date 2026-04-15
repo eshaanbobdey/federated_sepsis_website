@@ -1,6 +1,8 @@
 # Federated Sepsis Prediction Platform
 
-A privacy-preserving federated learning platform for sepsis prediction across multiple hospitals. This system enables hospitals to collaboratively train a global AI model without sharing raw patient data, using the FedAvg (Federated Averaging) algorithm.
+A privacy-preserving federated learning platform for **early sepsis prediction** across multiple hospitals. Sepsis is a life-threatening condition caused by the body's response to infection, and early detection is critical for patient survival. This system enables hospitals to collaboratively train a global AI model without sharing raw patient data, using the FedAvg (Federated Averaging) algorithm.
+
+The platform uses an **Artificial Neural Network (ANN)** trained on clinical features such as heart rate, oxygen saturation, temperature, blood pressure, age, and lab results to predict sepsis risk in ICU patients.
 
 ## Features
 
@@ -122,6 +124,27 @@ federated-learning-website/
 └── .env.example         # Environment template
 ```
 
+## Model Training
+
+To train your own local model for federated learning, see [`sample_train.py`](sample_train.py). This script demonstrates how to:
+
+1. Load and preprocess the sepsis dataset
+2. Train an Artificial Neural Network (ANN) with the architecture: **18 → 32 → 16 → 1**
+3. Handle class imbalance using balanced class weights
+4. Extract and save model weights as a `.pkl` file
+
+**Input Features (18):**
+`HR`, `O2Sat`, `Temp`, `SBP`, `MAP`, `DBP`, `Resp`, `Age`, `Gender`, `ICULOS`, `Creatinine`, `Glucose`, `Lactate`, `WBC`, `Platelets`, `Hgb`, `Hct`, `BUN`
+
+**Quick Start:**
+```bash
+python sample_train.py
+```
+
+This will generate `hospital_weights.pkl` files ready for upload to the platform.
+
+> **Note**: Save your trained model as a `.pkl` file and upload it through the dashboard to participate in federated learning rounds.
+
 ## How It Works
 
 1. **Local Training**: Each hospital trains a local model on their private data
@@ -139,3 +162,11 @@ federated-learning-website/
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+## Author
+
+**Eshaan Tushar Bobdey**
+
+*Built with passion for privacy-preserving healthcare AI*
