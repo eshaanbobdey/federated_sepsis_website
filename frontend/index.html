@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FedSepsis — Privacy-Preserving Sepsis Detection</title>
+  <meta name="description" content="Federated Learning platform for collaborative sepsis detection across hospitals while preserving patient data privacy." />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div class="bg-animated"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="login-container">
+    <div class="login-card animate-in">
+
+      <!-- Logo -->
+      <div class="login-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+      </div>
+
+      <!-- Title -->
+      <h1 class="login-title">FedSepsis</h1>
+      <p class="login-subtitle">
+        Privacy-Preserving Collaborative<br />Sepsis Detection Platform
+      </p>
+
+      <!-- Description -->
+      <div style="text-align: left; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem;">
+          <span style="color: var(--accent-teal);">🔒</span>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">No patient data leaves your hospital</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem;">
+          <span style="color: var(--accent-blue);">🧠</span>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">Train locally, collaborate globally</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="color: var(--accent-purple);">📊</span>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">Federated Averaging across all participants</span>
+        </div>
+      </div>
+
+      <div class="login-divider">Sign in to continue</div>
+
+      <!-- Google Sign-In Button -->
+      <div class="google-btn-wrapper">
+        <div id="google-signin-btn"></div>
+      </div>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p>
+          By signing in, you agree to share only model weights — never raw patient data.
+          Your privacy is our priority.
+        </p>
+      </div>
+
+      <!-- ECG decoration -->
+      <div class="ecg-line">
+        <svg width="1200" height="60" viewBox="0 0 1200 60">
+          <polyline fill="none" stroke="rgba(0,212,170,0.6)" stroke-width="1.5"
+            points="0,30 100,30 120,30 130,10 140,50 150,20 160,40 170,30 200,30 300,30 320,30 330,10 340,50 350,20 360,40 370,30 400,30 500,30 520,30 530,10 540,50 550,20 560,40 570,30 600,30 700,30 720,30 730,10 740,50 750,20 760,40 770,30 800,30 900,30 920,30 930,10 940,50 950,20 960,40 970,30 1000,30 1100,30 1120,30 1130,10 1140,50 1150,20 1160,40 1170,30 1200,30" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="script.js"></script>
+  <script>
+    // Initialize Google Sign-In
+    window.addEventListener('load', () => {
+      if (typeof google !== 'undefined' && google.accounts) {
+        initGoogleSignIn();
+      } else {
+        // Retry if GSI not loaded yet
+        const interval = setInterval(() => {
+          if (typeof google !== 'undefined' && google.accounts) {
+            clearInterval(interval);
+            initGoogleSignIn();
+          }
+        }, 200);
+      }
+    });
+
+    function initGoogleSignIn() {
+      google.accounts.id.initialize({
+        client_id: CONFIG.GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+      });
+
+      google.accounts.id.renderButton(
+        document.getElementById('google-signin-btn'),
+        {
+          theme: 'filled_blue',
+          size: 'large',
+          width: 280,
+          text: 'signin_with',
+          shape: 'pill',
+        }
+      );
+    }
+
+    async function handleGoogleCredential(response) {
+      try {
+        const result = await apiPost('/api/auth/google', {
+          credential: response.credential,
+        });
+
+        if (result.token) {
+          setToken(result.token);
+          setUser(result.user);
+
+          showToast('success', 'Welcome!', `Signed in as ${result.user.name || result.user.email}`);
+
+          // Redirect based on role
+          setTimeout(() => {
+            if (result.user.role === 'admin') {
+              window.location.href = '/admin.html';
+            } else {
+              window.location.href = '/dashboard.html';
+            }
+          }, 500);
+        }
+      } catch (error) {
+        showToast('error', 'Sign-in Failed', error.message || 'Could not authenticate with Google');
+      }
+    }
+
+    // Check if already logged in
+    const token = getToken();
+    if (token) {
+      apiGet('/api/auth/me')
+        .then(data => {
+          if (data.user) {
+            if (data.user.role === 'admin') {
+              window.location.href = '/admin.html';
+            } else {
+              window.location.href = '/dashboard.html';
+            }
+          }
+        })
+        .catch(() => {
+          clearAuth();
+        });
+    }
+  </script>
+</body>
+</html>

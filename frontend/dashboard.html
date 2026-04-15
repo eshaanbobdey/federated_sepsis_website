@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Dashboard — FedSepsis</title>
+  <meta name="description" content="Hospital dashboard for uploading trained model weights to the federated learning sepsis detection platform." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-animated"></div>
+  <div class="grid-overlay"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="navbar-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+      </svg>
+      <h1>FedSepsis</h1>
+    </div>
+    <div class="navbar-user">
+      <div class="navbar-user-info">
+        <div class="navbar-user-name" id="user-name">Hospital</div>
+        <div class="navbar-user-role">Hospital</div>
+      </div>
+      <div class="navbar-avatar" id="user-avatar">H</div>
+      <button class="btn btn-secondary" onclick="logout()" style="padding: 0.5rem 1rem; font-size: 0.8rem;">
+        Logout
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-container">
+
+    <!-- Page Header -->
+    <div class="page-header animate-in">
+      <h2>Hospital Dashboard</h2>
+      <p>Upload your locally trained model weights to contribute to the global sepsis detection model.</p>
+    </div>
+
+    <!-- Model Info Cards -->
+    <div class="content-grid triple animate-in">
+
+      <!-- Model Architecture -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Model Architecture
+          </h3>
+          <span class="badge badge-teal">Neural Network</span>
+        </div>
+        <div class="section-body">
+          <div class="model-arch">
+            <div class="layer-node">
+              <div class="layer-circle input">32</div>
+              <span class="layer-label">Input</span>
+            </div>
+            <div class="layer-connector"></div>
+            <div class="layer-node">
+              <div class="layer-circle hidden">16</div>
+              <span class="layer-label">Hidden</span>
+            </div>
+            <div class="layer-connector second"></div>
+            <div class="layer-node">
+              <div class="layer-circle output">1</div>
+              <span class="layer-label">Output</span>
+            </div>
+          </div>
+          <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+            Feedforward Neural Network (32 → 16 → 1)
+          </p>
+        </div>
+      </div>
+
+      <!-- Required Features -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            Input Features
+          </h3>
+          <span class="badge badge-blue">18 features</span>
+        </div>
+        <div class="section-body">
+          <div class="features-grid">
+            <div class="feature-chip vital"><span class="chip-dot"></span>HR</div>
+            <div class="feature-chip vital"><span class="chip-dot"></span>O2Sat</div>
+            <div class="feature-chip vital"><span class="chip-dot"></span>Temp</div>
+            <div class="feature-chip vital"><span class="chip-dot"></span>SBP</div>
+            <div class="feature-chip vital"><span class="chip-dot"></span>MAP</div>
+            <div class="feature-chip vital"><span class="chip-dot"></span>DBP</div>
+            <div class="feature-chip vital"><span class="chip-dot"></span>Resp</div>
+            <div class="feature-chip demo"><span class="chip-dot"></span>Age</div>
+            <div class="feature-chip demo"><span class="chip-dot"></span>Gender</div>
+            <div class="feature-chip demo"><span class="chip-dot"></span>ICULOS</div>
+            <div class="feature-chip lab"><span class="chip-dot"></span>Creatinine</div>
+            <div class="feature-chip lab"><span class="chip-dot"></span>Glucose</div>
+            <div class="feature-chip lab"><span class="chip-dot"></span>Lactate</div>
+            <div class="feature-chip lab"><span class="chip-dot"></span>WBC</div>
+            <div class="feature-chip lab"><span class="chip-dot"></span>Platelets</div>
+            <div class="feature-chip lab"><span class="chip-dot"></span>Hgb</div>
+            <div class="feature-chip lab"><span class="chip-dot"></span>Hct</div>
+            <div class="feature-chip lab"><span class="chip-dot"></span>BUN</div>
+          </div>
+          <div style="display: flex; gap: 1rem; margin-top: 1rem; font-size: 0.7rem;">
+            <span style="display: flex; align-items: center; gap: 4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent-teal);"></span> Vitals</span>
+            <span style="display: flex; align-items: center; gap: 4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent-blue);"></span> Demographics</span>
+            <span style="display: flex; align-items: center; gap: 4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent-purple);"></span> Lab Values</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-amber)" stroke-width="2" width="18" height="18"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v4M12 16h.01"/></svg>
+            Instructions
+          </h3>
+        </div>
+        <div class="section-body">
+          <ul class="instruction-list">
+            <li>
+              <div class="instruction-icon">1</div>
+              <span>Train the model <strong>locally</strong> using your hospital dataset on the given architecture.</span>
+            </li>
+            <li>
+              <div class="instruction-icon">2</div>
+              <span>Extract weights using <code class="font-mono" style="background: rgba(0,212,170,0.1); padding: 0.1rem 0.4rem; border-radius: 4px; color: var(--accent-teal);">model.get_weights()</code></span>
+            </li>
+            <li>
+              <div class="instruction-icon">3</div>
+              <span>Save as <strong>.pkl</strong> file and upload below. Only model weights are accepted.</span>
+            </li>
+          </ul>
+          <div class="instruction-warning">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Do NOT upload raw patient data. Only model weights (.pkl) are allowed.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="content-grid animate-in" style="animation-delay: 0.2s;">
+      <!-- Upload Zone -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload Model Weights
+          </h3>
+        </div>
+        <div class="section-body">
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="file-input" accept=".pkl" style="display: none;" />
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="17,8 12,3 7,8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <p class="upload-title">Drop your weights file here</p>
+            <p class="upload-subtitle">or click to browse files</p>
+            <p class="upload-constraint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v4M12 16h.01"/></svg>
+              Only .pkl files are accepted
+            </p>
+            <div class="upload-progress" id="upload-progress">
+              <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+              </div>
+              <p class="progress-text" id="progress-text">Uploading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload History -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            Upload History
+          </h3>
+          <span class="badge badge-blue" id="upload-count">0 uploads</span>
+        </div>
+        <div class="section-body" style="padding: 0;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>File</th>
+                <th>Size</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="upload-history-body">
+              <tr>
+                <td colspan="4" class="table-empty">No uploads yet. Upload your first model weights above.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="script.js"></script>
+  <script>
+    // Auth guard
+    requireAuth('hospital');
+
+    // Populate user info
+    const user = getUser();
+    if (user) {
+      document.getElementById('user-name').textContent = user.name || user.email;
+      document.getElementById('user-avatar').textContent = (user.name || user.email).charAt(0).toUpperCase();
+    }
+
+    // --- Upload Logic ---
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('file-input');
+    const uploadProgress = document.getElementById('upload-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+
+    // Click to browse
+    uploadZone.addEventListener('click', (e) => {
+      if (e.target === fileInput) return;
+      fileInput.click();
+    });
+
+    // Drag and drop
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) handleFileUpload(files[0]);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        handleFileUpload(fileInput.files[0]);
+      }
+    });
+
+    async function handleFileUpload(file) {
+      // Validate
+      if (!file.name.endsWith('.pkl')) {
+        showToast('error', 'Invalid File', 'Only .pkl files are allowed. Please upload a pickle file.');
+        return;
+      }
+
+      // Show progress
+      uploadProgress.classList.add('active');
+      progressBar.style.width = '0%';
+      progressText.textContent = 'Uploading...';
+
+      // Simulate progress
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+        progressBar.style.width = progress + '%';
+      }, 200);
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload_weights', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+          },
+          body: formData,
+        });
+
+        clearInterval(progressInterval);
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'Upload failed');
+        }
+
+        const data = await response.json();
+        progressBar.style.width = '100%';
+        progressText.textContent = 'Upload complete!';
+
+        showToast('success', 'Upload Successful', `"${file.name}" has been uploaded successfully.`);
+
+        // Refresh history
+        setTimeout(() => {
+          uploadProgress.classList.remove('active');
+          loadUploadHistory();
+        }, 1500);
+
+      } catch (error) {
+        clearInterval(progressInterval);
+        uploadProgress.classList.remove('active');
+        showToast('error', 'Upload Failed', error.message);
+      }
+
+      // Reset file input
+      fileInput.value = '';
+    }
+
+    // --- Upload History ---
+    async function loadUploadHistory() {
+      try {
+        const data = await apiGet('/api/weights');
+        const tbody = document.getElementById('upload-history-body');
+        const countBadge = document.getElementById('upload-count');
+
+        if (!data.weights || data.weights.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No uploads yet. Upload your first model weights above.</td></tr>';
+          countBadge.textContent = '0 uploads';
+          return;
+        }
+
+        countBadge.textContent = `${data.weights.length} upload${data.weights.length !== 1 ? 's' : ''}`;
+
+        tbody.innerHTML = data.weights.map(w => `
+          <tr>
+            <td style="color: var(--text-primary); font-weight: 500;">${w.original_filename}</td>
+            <td>${formatFileSize(w.file_size)}</td>
+            <td>${formatDate(w.uploaded_at)}</td>
+            <td><span class="status status-success"><span class="status-dot"></span>Uploaded</span></td>
+          </tr>
+        `).join('');
+
+      } catch (error) {
+        console.error('Failed to load upload history:', error);
+      }
+    }
+
+    // Load on page ready
+    loadUploadHistory();
+  </script>
+</body>
+</html>

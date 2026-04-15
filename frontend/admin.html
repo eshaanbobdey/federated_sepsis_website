@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — FedSepsis</title>
+  <meta name="description" content="Admin dashboard for managing federated learning aggregation across participating hospitals." />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* Modal Styles */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 1.5rem;
+      }
+      .modal-overlay.active {
+        display: flex;
+      }
+      .modal-box {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-xl);
+        width: 100%;
+        position: relative;
+      }
+      .modal-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: var(--text-primary);
+      }
+      .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1.5rem;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+      .modal-body p {
+        color: var(--text-secondary);
+        margin-top: 1rem;
+        line-height: 1.5;
+      }
+    </style>
+</head>
+<body>
+  <div class="bg-animated"></div>
+  <div class="grid-overlay"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+      </svg>
+      <h1>FedSepsis</h1>
+    </div>
+    <div class="navbar-user">
+      <div class="navbar-user-info">
+        <div class="navbar-user-name" id="admin-name">Admin</div>
+        <div class="navbar-user-role" style="color: var(--accent-purple);">Administrator</div>
+      </div>
+      <div class="navbar-avatar" id="admin-avatar" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));">A</div>
+      <button class="btn btn-secondary" onclick="logout()" style="padding: 0.5rem 1rem; font-size: 0.8rem;">
+        Logout
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-container">
+
+    <!-- Page Header -->
+    <div class="page-header animate-in">
+      <h2>Admin Dashboard</h2>
+      <p>Monitor hospital participation, manage model weights, and perform federated aggregation.</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid animate-in">
+      <div class="stat-card teal">
+        <div class="stat-icon">🏥</div>
+        <div class="stat-value" id="stat-hospitals">0</div>
+        <div class="stat-label">Registered Hospitals</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">📦</div>
+        <div class="stat-value" id="stat-uploads">0</div>
+        <div class="stat-label">Total Uploads</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-icon">🤝</div>
+        <div class="stat-value" id="stat-participating">0</div>
+        <div class="stat-label">Participating Hospitals</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-icon">🧬</div>
+        <div class="stat-value" id="stat-model-version">—</div>
+        <div class="stat-label">Model Version</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-grid animate-in" style="animation-delay: 0.15s;">
+
+      <!-- Aggregation Controls -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2" width="18" height="18"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            Federated Aggregation
+          </h3>
+        </div>
+        <div class="section-body">
+          <div class="aggregation-controls">
+            <div class="aggregation-status" id="agg-status">
+              <div class="agg-status-icon ready" id="agg-status-icon">⚡</div>
+              <div class="agg-status-text">
+                <h4 id="agg-status-title">Ready to Aggregate</h4>
+                <p id="agg-status-desc">Click the button below to run Federated Averaging on all uploaded weights.</p>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-aggregate" onclick="runAggregation()" style="width: 100%; padding: 1rem; font-size: 1rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+              Run Federated Averaging (FedAvg)
+            </button>
+
+            <!-- Global Model Download -->
+            <div id="global-model-section" class="hidden">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: rgba(10, 18, 40, 0.5); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div>
+                  <h4 style="font-size: 0.9rem; margin-bottom: 0.15rem;">Global Model Available</h4>
+                  <p style="font-size: 0.8rem; color: var(--text-secondary);" id="global-model-info">Version 1 • 0 participants</p>
+                </div>
+                <button class="btn btn-secondary" onclick="downloadGlobalModel()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Uploads Chart -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" width="18" height="18"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Uploads per Hospital
+          </h3>
+        </div>
+        <div class="section-body">
+          <div class="chart-container" id="chart-container">
+            <canvas id="uploads-chart"></canvas>
+            <p class="table-empty" id="chart-empty" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">No upload data available yet</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Uploaded Weights -->
+    <div class="content-grid single animate-in" style="animation-delay: 0.25s;">
+      <div class="section-card">
+        <div class="section-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" stroke-width="2" width="18" height="18"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            Uploaded Weights
+          </h3>
+          <span class="badge badge-purple" id="weights-count">0 records</span>
+        </div>
+        <div class="section-body" style="padding: 0; overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Hospital</th>
+                <th>Email</th>
+                <th>File</th>
+                <th>Size</th>
+                <th>Uploaded</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="weights-table-body">
+              <tr>
+                <td colspan="7" class="table-empty">No weights uploaded yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registered Hospitals -->
+    <div class="content-grid single animate-in" style="animation-delay: 0.28s;">
+      <div class="section-card">
+        <div class="section-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2" width="18" height="18"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Registered Hospitals
+          </h3>
+          <span class="badge badge-teal" id="hospitals-count">0 record</span>
+        </div>
+        <div class="section-body" style="padding: 0; overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Joined</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="hospitals-table-body">
+              <tr>
+                <td colspan="4" class="table-empty">No hospitals registered yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aggregation History -->
+    <div class="content-grid single animate-in" style="animation-delay: 0.3s;">
+      <div class="section-card">
+        <div class="section-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-amber)" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            Aggregation History
+          </h3>
+        </div>
+        <div class="section-body" style="padding: 0;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Version</th>
+                <th>Participants</th>
+                <th>Created</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              <tr>
+                <td colspan="5" class="table-empty">No aggregations performed yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Custom Confirmation Modal -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal-box animate-in" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 id="confirm-title">Confirm Action</h3>
+        <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message">Are you sure you want to proceed?</p>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="closeConfirmModal()" style="flex: 1;">Cancel</button>
+        <button class="btn btn-primary" id="confirm-btn-ok" style="flex: 1; background: #ef4444; border-color: #ef4444;">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Auth guard — admin only
+    requireAuth('admin');
+
+    // Populate admin info
+    const user = getUser();
+    if (user) {
+      document.getElementById('admin-name').textContent = user.name || user.email;
+      document.getElementById('admin-avatar').textContent = (user.name || user.email).charAt(0).toUpperCase();
+    }
+
+    // --- Load Dashboard Data ---
+    async function loadDashboard() {
+      await Promise.all([
+        loadStats(),
+        loadWeights(),
+        loadHospitals(),
+        loadGlobalModel(),
+        loadHistory(),
+      ]);
+    }
+
+    async function loadStats() {
+      try {
+        const data = await apiGet('/api/stats');
+        document.getElementById('stat-hospitals').textContent = data.hospital_count;
+        document.getElementById('stat-uploads').textContent = data.total_uploads;
+        document.getElementById('stat-participating').textContent = data.participating_hospitals;
+
+        // Render chart
+        if (data.uploads_per_hospital && data.uploads_per_hospital.length > 0) {
+          document.getElementById('chart-empty').style.display = 'none';
+          renderChart(data.uploads_per_hospital);
+        }
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    }
+
+    async function loadWeights() {
+      try {
+        const data = await apiGet('/api/weights');
+        const tbody = document.getElementById('weights-table-body');
+        const countBadge = document.getElementById('weights-count');
+
+        if (!data.weights || data.weights.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="table-empty">No weights uploaded yet</td></tr>';
+          countBadge.textContent = '0 records';
+          return;
+        }
+
+        countBadge.textContent = `${data.weights.length} record${data.weights.length !== 1 ? 's' : ''}`;
+
+        tbody.innerHTML = data.weights.map(w => `
+          <tr>
+            <td style="color: var(--text-primary); font-weight: 500;">${w.hospital_name || '—'}</td>
+            <td style="font-family: var(--font-mono); font-size: 0.8rem;">${w.email || '—'}</td>
+            <td>${w.original_filename}</td>
+            <td>${formatFileSize(w.file_size)}</td>
+            <td>${formatDate(w.uploaded_at)}</td>
+            <td><span class="status status-success"><span class="status-dot"></span>Ready</span></td>
+            <td>
+              <button class="btn btn-secondary btn-icon" onclick="deleteWeight(${w.id})" title="Delete Weight" style="padding: 0.3rem; min-width: auto; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to load weights:', error);
+      }
+    }
+
+    async function loadGlobalModel() {
+      try {
+        const data = await apiGet('/api/global_model');
+        if (data.global_model) {
+          document.getElementById('stat-model-version').textContent = `v${data.global_model.version}`;
+          document.getElementById('global-model-section').classList.remove('hidden');
+          document.getElementById('global-model-info').textContent =
+            `Version ${data.global_model.version} • ${data.global_model.num_participants} participants • ${formatDate(data.global_model.created_at)}`;
+        } else {
+          document.getElementById('stat-model-version').textContent = '—';
+        }
+      } catch (error) {
+        console.error('Failed to load global model:', error);
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const data = await apiGet('/api/global_model/history');
+        const tbody = document.getElementById('history-table-body');
+
+        if (!data.history || data.history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No aggregations performed yet</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.history.map(m => `
+          <tr>
+            <td style="color: var(--text-primary); font-weight: 600;">v${m.version}</td>
+            <td>${m.num_participants} hospitals</td>
+            <td>${formatDate(m.created_at)}</td>
+            <td><span class="status status-success"><span class="status-dot"></span>Complete</span></td>
+            <td style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" onclick="downloadModel(${m.version})" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;">
+                Download
+              </button>
+              <button class="btn btn-secondary btn-icon" onclick="deleteGlobalModel(${m.id})" title="Delete Version" style="padding: 0.3rem; min-width: auto; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to load history:', error);
+      }
+    }
+
+    // --- Aggregation ---
+    async function runAggregation() {
+      const btn = document.getElementById('btn-aggregate');
+      const statusIcon = document.getElementById('agg-status-icon');
+      const statusTitle = document.getElementById('agg-status-title');
+      const statusDesc = document.getElementById('agg-status-desc');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Processing FedAvg...';
+      statusIcon.className = 'agg-status-icon processing';
+      statusIcon.textContent = '⏳';
+      statusTitle.textContent = 'Aggregating...';
+      statusDesc.textContent = 'Running Federated Averaging across all hospital weights...';
+
+      try {
+        const data = await apiPost('/api/aggregate', {});
+        showToast('success', 'Aggregation Complete!',
+          `Global model v${data.version} created from ${data.num_participants} hospitals.`);
+
+        statusIcon.className = 'agg-status-icon ready';
+        statusIcon.textContent = '✅';
+        statusTitle.textContent = 'Aggregation Complete';
+        statusDesc.textContent = `Model v${data.version} • ${data.num_participants} participants`;
+
+        // Reload data
+        await loadDashboard();
+
+      } catch (error) {
+        showToast('error', 'Aggregation Failed', error.message);
+        statusIcon.className = 'agg-status-icon ready';
+        statusIcon.textContent = '❌';
+        statusTitle.textContent = 'Aggregation Failed';
+        statusDesc.textContent = error.message;
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+        Run Federated Averaging (FedAvg)
+      `;
+    }
+
+    // --- Download ---
+    async function downloadGlobalModel() {
+      try {
+        const response = await fetch('/api/global_model/download', {
+          headers: { 'Authorization': `Bearer ${getToken()}` },
+        });
+        if (!response.ok) throw new Error('Download failed');
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'global_model.pkl';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('success', 'Download Started', 'Global model is downloading...');
+      } catch (error) {
+        showToast('error', 'Download Failed', error.message);
+      }
+    }
+
+    function downloadModel(version) {
+      downloadGlobalModel();
+    }
+
+    // --- Chart ---
+    function renderChart(uploadsData) {
+      const canvas = document.getElementById('uploads-chart');
+      const ctx = canvas.getContext('2d');
+      const container = document.getElementById('chart-container');
+
+      // Set canvas size
+      canvas.width = container.offsetWidth - 32;
+      canvas.height = 220;
+
+      const data = uploadsData;
+      const maxVal = Math.max(...data.map(d => d.count), 1);
+      const barWidth = Math.min(60, (canvas.width - 80) / data.length - 10);
+      const chartHeight = canvas.height - 50;
+      const startX = 50;
+      const startY = 10;
+
+      // Clear
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw bars
+      data.forEach((d, i) => {
+        const barHeight = (d.count / maxVal) * (chartHeight - 20);
+        const x = startX + i * (barWidth + 10);
+        const y = startY + chartHeight - barHeight;
+
+        // Gradient bar
+        const gradient = ctx.createLinearGradient(x, y, x, startY + chartHeight);
+        gradient.addColorStop(0, '#00d4aa');
+        gradient.addColorStop(1, 'rgba(0, 212, 170, 0.2)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, barHeight, [4, 4, 0, 0]);
+        ctx.fill();
+
+        // Value on top
+        ctx.fillStyle = '#e8ecf4';
+        ctx.font = '600 12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(d.count, x + barWidth / 2, y - 6);
+
+        // Label at bottom
+        ctx.fillStyle = '#4f5b78';
+        ctx.font = '500 10px Inter, sans-serif';
+        const label = d.hospital.length > 10 ? d.hospital.substring(0, 9) + '…' : d.hospital;
+        ctx.fillText(label, x + barWidth / 2, startY + chartHeight + 16);
+      });
+
+      // Y-axis line
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.1)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(startX - 10, startY);
+      ctx.lineTo(startX - 10, startY + chartHeight);
+      ctx.stroke();
+    }
+
+    // --- Initialize ---
+    loadDashboard();
+
+    async function loadHospitals() {
+      try {
+        const data = await apiGet('/api/auth/admin/hospitals');
+        const tbody = document.getElementById('hospitals-table-body');
+        const countBadge = document.getElementById('hospitals-count');
+
+        if (!data.hospitals || data.hospitals.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No hospitals registered yet</td></tr>';
+          countBadge.textContent = '0 records';
+          return;
+        }
+
+        countBadge.textContent = `${data.hospitals.length} record${data.hospitals.length !== 1 ? 's' : ''}`;
+
+        tbody.innerHTML = data.hospitals.map(h => `
+          <tr>
+            <td style="color: var(--text-primary); font-weight: 500;">${h.name || '—'}</td>
+            <td style="font-family: var(--font-mono); font-size: 0.8rem;">${h.email}</td>
+            <td>${formatDate(h.created_at)}</td>
+            <td>
+              <button class="btn btn-secondary btn-icon" onclick="deleteHospital(${h.id}, '${h.email}')" title="Delete Hospital" style="padding: 0.3rem; min-width: auto; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to load hospitals:', error);
+      }
+    }
+
+    // --- Deletions ---
+    let confirmResolve = null;
+
+    function showConfirmModal(title, message, isDelete = true) {
+      return new Promise((resolve) => {
+        document.getElementById('confirm-title').textContent = title;
+        document.getElementById('confirm-message').textContent = message;
+        
+        const okBtn = document.getElementById('confirm-btn-ok');
+        okBtn.textContent = isDelete ? 'Delete' : 'Confirm';
+        okBtn.style.background = isDelete ? '#ef4444' : 'var(--accent-teal)';
+        okBtn.style.borderColor = okBtn.style.background;
+        
+        const modal = document.getElementById('confirm-modal');
+        modal.classList.add('active');
+        
+        // Handle OK
+        okBtn.onclick = () => {
+          modal.classList.remove('active');
+          resolve(true);
+        };
+        
+        // Handle Cancel (via confirmResolve for external close)
+        confirmResolve = (val) => {
+          modal.classList.remove('active');
+          resolve(val);
+        };
+      });
+    }
+
+    function closeConfirmModal() {
+      if (confirmResolve) confirmResolve(false);
+      confirmResolve = null;
+    }
+
+    async function deleteHospital(id, email) {
+      const confirmed = await showConfirmModal('Delete Hospital', `Are you sure you want to delete hospital ${email}? This will remove ALL their uploaded weights.`);
+      if (!confirmed) return;
+      
+      try {
+        await apiDelete(`/api/auth/admin/hospitals/${id}`);
+        showToast('success', 'Hospital Deleted', `Hospital ${email} has been removed.`);
+        await loadDashboard();
+      } catch (error) {
+        showToast('error', 'Deletion Failed', error.message);
+      }
+    }
+
+    async function deleteWeight(id) {
+      const confirmed = await showConfirmModal('Delete Weight', 'Are you sure you want to delete this specific weight file?');
+      if (!confirmed) return;
+
+      try {
+        await apiDelete(`/api/weights/${id}`);
+        showToast('success', 'Weight Deleted', 'The weight file has been removed.');
+        await loadDashboard();
+      } catch (error) {
+        showToast('error', 'Deletion Failed', error.message);
+      }
+    }
+
+    async function deleteGlobalModel(id) {
+      const confirmed = await showConfirmModal('Delete Version', 'Are you sure you want to delete this global model version?');
+      if (!confirmed) return;
+
+      try {
+        await apiDelete(`/api/global_model/${id}`);
+        showToast('success', 'Model Deleted', 'Global model version removed from history.');
+        await loadDashboard();
+      } catch (error) {
+        showToast('error', 'Deletion Failed', error.message);
+      }
+    }
+  </script>
+</body>
+</html>
