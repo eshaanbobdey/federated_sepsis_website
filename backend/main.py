@@ -1,10 +1,8 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 from backend.database import init_db
-from backend.config import FRONTEND_DIR
 from backend.routes import auth, weights, aggregate
 
 
@@ -22,10 +20,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow frontend on same origin
+# CORS — update with your Netlify URL after deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5500",  # Local development
+        "http://127.0.0.1:5500",
+        # Add your Netlify URL here after deployment, e.g.:
+        # "https://your-site.netlify.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,5 +39,12 @@ app.include_router(auth.router)
 app.include_router(weights.router)
 app.include_router(aggregate.router)
 
-# Serve frontend static files
-app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+
+@app.get("/")
+async def root():
+    return {"message": "FedSepsis API is running"}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}

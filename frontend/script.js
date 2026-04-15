@@ -6,7 +6,8 @@
 const CONFIG = {
   // Replace with your actual Google Client ID from Google Cloud Console
   GOOGLE_CLIENT_ID: '345679535396-qa195u4rclok1b4he866p8fmu28fujb8.apps.googleusercontent.com',
-  API_BASE: '',  // Same origin
+  // Use env variable for deployment, empty for local development
+  API_BASE: window.API_BASE_URL || '',
 };
 
 // ---- Auth Helpers ----
